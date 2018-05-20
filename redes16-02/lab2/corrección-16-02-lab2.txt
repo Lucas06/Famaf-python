@@ -1,0 +1,69 @@
++ README.md:
+  + Varios errores de ortografía.
+  + En "Se creó una constante NUM_CLIENTS = 5, definida en el modulo Constans
+        para determinar la cantidad máxima de clientes que un servidor podría
+        escuchar al mismo tiempo.":,
+    en realidad self.socket_server.listen(NUM_CLIENTS) define hasta cuantos clientes
+    podés tener esperando antes de hacer un accept(), que es distinto
+    a cuanto clientes podés tener escuchando al mismo tiempo.
+
++ asyncserver.py:77: Como s_client tiene un método fileno():
+    poll.register(s_client.fileno(), select.POLLIN) es equivalente a:
+    poll.register(s_client, select.POLLIN)
+
++ El len() no es necesario en connection.py:54:
+    if len(self.buffer_out):
+
++ La llamada a send()/recv() puede devolver 0 indicando que la
+  comunicación se rompió (https://docs.python.org/2/howto/sockets.html#using-a-socket),
+  entonces en connection.py:54 hay que controlar lo que devuelve send():
+  if len(self.buffer_out):  # Consume todo el buffer_out
+    sended_size = self.socket.send(self.buffer_out)
+    if sended_size == 0:
+        # error
+    self.buffer_out = self.buffer_out[sended_size:]
+
++ Está muy bueno como implementaron Connection:process_request().
+  Otra forma podría haber sido:
+
+  # Crear un diccionario que mapee: comando-función_que_lo_procesa
+  hftp_commands = {
+    'quit': self.quit,
+    'get_file_listing': self.get_file_listing,
+    'get_metadata': self.get_metadata,
+    'get_slice': self.get_slice
+  }
+
+  # Definir las funciones que procesan cada comando (todas con la misma signatura).
+  # El parseo de cantidad de argumentos y tipo se hace dentro de cada función.
+    def quit(request):
+        ...
+    def get_file_listing(request):
+        ...
+    def get_metadata(request):
+        ...
+    def get_slice(request):
+        ...
+
+  # Por último, process_request() quedaría:
+    def process_request(request):
+        if CR in request:  # Busca \n suelto en un request.
+            self.buffer_out = message_from_code(BAD_EOL)
+            self.remove = True
+        else:
+            # Recuperar el nombre del comando
+            try:
+                self.htfp_commands[command](request)
+            except KeyError:
+                # Comando no existe
+
+  Las ventajas de éste diseño son:
+    + Mas escalable. Para agregar un nuevo comando sólo se define la función
+      que lo procesa y se agrega una nueva entrada al diccionario.
+    + Mas acotado. Todo el parseo del comando está implementado dentro de su función.
+      Actualmente ustedes tienen dividido el chequeo de sintaxis en process_request(), en
+      cada una de las funciones de procesamiento de comandos y en check_command_error().
+    + process_request() más sencillo.
+
++ En commands.py:quit() olvidaron la constante SP y los espacios entre operadores:
+     return str(CODE_OK)+" "+QUIT_MESSAGE+EOL
