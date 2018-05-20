@@ -1,0 +1,118 @@
+\section{Algoritmo y descripción de las variables}
+
+  \par En la siguiente sección se presentarán los algoritmos utilizados para la realización de las simulaciones del
+  problema de la lavandería. Dichos algoritmos serán explicados con palabras para facilitar la comprensión del lector
+  y luego se proveerá un pseudocódigo de los mismos.
+
+  \vspace{5mm}
+  \par El siguiente algoritmo simula el sistema de la lavandería, con $N$ máquinas en funcionamiento, $S$ máquinas de
+  repuesto y $Op$ operarios. Para poder resolver los problemas presentados en la introducción, debemos tomar los
+  siguientes valores:
+
+  \begin{itemize}
+    \item Problema 1: N = 5, S = 2, Op = 1
+    \item Problema 2: N = 5, S = 2, Op = 2
+    \item Problema 3: N = 5, S = 3, Op = 1
+  \end{itemize}
+
+  \par Dentro del algoritmo antes mencionado, se utilizan las siguientes variables, las cuales son inicializadas al
+  comienzo del mismo:
+  \begin{itemize}
+    \item $time$: Variable de tiempo actual.
+    \item $machines\_down\_number$: Cantidad de máquinas rotas.
+    \item $repair\_time$: Lista con los tiempos de reparación de cada máquina.
+    \item $life\_times$: Lista con los tiempos de vida de cada máquina, es decir, el tiempo hasta presentar una falla.
+  \end{itemize}
+
+  \par El estado del sistema puede cambiar en dos posibles casos: se averió una máquina y debe ser reemplazada, o bien,
+  se terminó de reparar una máquina y la misma puede volver a ser utilizada. Para poder saber cual de dichos eventos
+  ocurrió necesitamos mantener como invariante el orden de las listas $repair\_time$ y $life\_times$. A continuación
+  serán explicados los dos posibles sucesos.
+
+  \par Para resolver el primer incidente basta con verificar que el tiempo de vida de la primera máquina sea menor al
+  primer tiempo de reparación, y de ser así, almacenar en la variable $time$, el tiempo de falla de la primera máquina,
+  aumentando la cantidad de máquinas rotas en uno (dado que otra máquina falló). Si no existiesen máquinas de repuesto
+  se terminará la simulación, puesto que el sistema no puede continuar. En caso de que existan, se genera una variable
+  aleatoria $X \sim \mathcal{E}(1/T_F)$, la misma será el tiempo de falla de la nueva máquina, luego se agrega el valor
+  $time + X$ a la lista $life\_time$ y se reordena dicha lista. Podría ocurrir que exista un operario libre entonces se
+  le encarga la reparación de la máquina en forma inmediata, para ello se genera una variable aleatoria
+  $Y \sim \mathcal{E}(1/T_R)$ y se agrega el tiempo $time + Y$ a la lista $repair\_time$, reordenando la
+  misma.
+
+  \par En el segundo incidente, se terminó de reparar una máquina por lo tanto se decrementa en uno
+  $machines\_down\_number$. Además la variable $time$ será el tiempo de reparación de la primera máquina. Por otro
+  lado, se calcula la cantidad de operadores libres, en caso de que hubiesen máquinas descompuestas y operarios libres
+  se designa a los trabajadores dichas máquinas. Para ello, igual que en el caso anterior, se generan variables
+  aleatorias $Y \sim \mathcal{E}(1/T_R)$ para cada máquina a reparar. Por último, se reordenan los valores en
+  $repair\_time$ nuevamente.
+
+
+  \begin{algorithm} [H]
+    \caption{Experimento con $N$ máquinas en funcionamiento, $S$ de repuesto y $Op$ operarios}
+    \label{alg1}
+    \begin{algorithmic} [1]
+    \STATE $ time \leftarrow  0 $ \label{line:1}\hfill\COMMENT{Actual time}
+    \STATE $ machines\_down\_number \leftarrow  0 $ \label{line:2}
+    \STATE $ repair\_time \leftarrow  \{\infty, \infty, \dots, \infty_{Op}\} $ \label{line:3}
+    \STATE $ life\_times \leftarrow \{ X_1, X_2, \dots , X_N \} $ \label{line:4}
+    \hfill\COMMENT{$ X_i \sim \mathcal{E}(1/T_F) $ y $ X_1 < X_2 < \dots < X_N $}
+
+    \WHILE{System is working}
+      \IF{$ life\_times_1 < repair\_time_1 $} \label{line:6}
+        \RESET $ time \leftarrow  life\_times_{1}$ \label{line:7}
+        \STATE $ machines\_down\_number \leftarrow  machines\_down\_number + 1 $ \label{line:8}
+
+        \IF{$ machines\_down\_number = S + 1$}
+          \RETURN $ time $ \label{line:10}
+        \ENDIF
+        \IF{$ machines\_down\_number < S + 1 $}
+          \STATE $ X \leftarrow time + \mathcal{E}(1/T_F) $
+          \STATE $ life\_times \leftarrow \{X_2, \dots, X_N, X\} $
+          \STATE Reorder the values ${ X_2, \dots, X_N, X} $
+        \ENDIF
+        \IF{$ operator\ not\ working $}
+          \STATE $ Y \leftarrow time + \mathcal{E}(1/T_F) $
+          \STATE $ repair\_time \leftarrow \{X_1, \dots,\ Y, \dots, X_N, Y\} $
+        \ENDIF
+
+      \ELSE
+        \RESET $ time \leftarrow repair\_time_1 $
+        \STATE $ repair\_time \leftarrow \{ Y_2, Y_3, \dots, Y_N, \infty \} $
+        \STATE $ free\_op \leftarrow Number\ of\ free\ operator\ $
+        \IF{$ free\_op \leq machines\_down\_number $}
+            \STATE $ repair\_times \leftarrow \{ time + Y_1, time + Y_2, \dots, time + Y_N \} $
+                \hfill\COMMENT{$ Y_i \sim \mathcal{E}(1/T_r)$}
+            \STATE $ free\_op \leftarrow 0 $
+        \ENDIF
+        \IF{$ machines\_down\_number = 0 $}
+          \STATE $ repair\_times \leftarrow \{ \infty, \infty, \dots, \infty \} $
+        \ENDIF
+        \IF{$ 0 < machines\_down\_number < free\_op $}
+          \STATE $ repair\_times \leftarrow \{ time + Y_1,\dots, time + Y_{free\_op}, \infty,\dots\} $
+          \hfill\COMMENT{$ Y_i \sim \mathcal{E}(1/T_r)$}
+
+        \ENDIF
+        \STATE Reorder the values in $ repair\_time $
+      \ENDIF
+    \ENDWHILE
+    \end{algorithmic}
+  \end{algorithm}
+
+  \pagebreak
+  \par El algoritmo posterior se encarga de simular el experimento propiamente dicho, es decir, recrear la simulación
+  la cantidad de veces necesarias para obtener los valores de la media y varianza muestrales de los tiempos de vida del
+  sistema, con un nivel de confianza $\alpha$.
+
+  \begin{algorithm}
+  \caption{Simulación del experimento con confianza $\alpha$}
+    \label{alg2}
+    \begin{algorithmic}
+      \STATE Elegir $\alpha$ como valor aceptable de $\sigma / \sqrt{n}$
+      \STATE Generar al menos 1000 valores de X.
+      \WHILE{$S(n) /\sqrt{n} > \alpha$}
+        \STATE $n \leftarrow n + 1$
+        \STATE Simular $X$ con el experimento
+      \ENDWHILE
+      \RETURN $\overline{X}(n)$
+    \end{algorithmic}
+  \end{algorithm}

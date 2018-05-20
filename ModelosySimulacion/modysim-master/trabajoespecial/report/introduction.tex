@@ -1,0 +1,23 @@
+\section{\textbf{Introducción}}
+
+	\par Un lavadero de ropa automático, cuenta con \textbf{N} máquinas lavadoras en servicio y con \textbf{S} de
+	repuesto, todas ellas de idéntica marca, modelo y antigüedad. Además el lavadero cuenta con los servicios de técnicos
+	que reparan las máquinas. Obviamente, los técnicos reparan las máquinas en serie, encargándose de una sola por
+	vez. El problema consiste en determinar el tiempo medio (\textit{y su correspondiente desviación estándar}) que
+	transcurre hasta que el lavadero deja de ser operativo (\textit{fallo del sistema}), esto es, el momento en el que se
+	tiene menos de \textbf{N} máquinas en servicio, o lo que es lo mismo, posee más de \textbf{S} máquinas defectuosas en
+	el taller.
+
+	\par Todos los tiempos de funcionamiento de las máquinas, hasta descomponerse son variables independientes
+	exponenciales con un tiempo medio, hasta fallar, de \textbf{$T_{F}$} y el tiempo de reparación de una máquina que
+	ingresa al taller es una variable exponencial con media igual a \textbf{$T_{R}$}, independiente de todos los
+	anteriores.
+
+	\par Se analizan dos posibles mejoras al sistema de la lavandería, en una de ellas se considera el caso en el cual el
+	lavadero tiene a su disposición un operario más que al principio, y otro donde se cuenta con una máquina de repuesto
+	extra.
+
+	\par El procedimiento para poder solucionar este problema consiste de una simulación mediante un algoritmo, el cual,
+	por medio de los tiempos de falla y reparación de las máquinas, realiza una recopilación de datos para luego estimar
+	la media y la desviación estándar muestrales. Posterior a las estimaciones, se realizan gráficos con los datos
+	recolectados y por medio de los mismos se decide que tan precisas fueron las simulaciones.
